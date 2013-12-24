@@ -178,7 +178,7 @@ initial-number-buses
 initial-number-buses
 0
 100
-1
+6
 1
 1
 NIL
@@ -225,7 +225,7 @@ initial-number-peds
 initial-number-peds
 0
 100
-4
+6
 1
 1
 NIL
