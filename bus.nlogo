@@ -1,6 +1,7 @@
 breed [buses bus]
 breed [peds ped]
-
+peds-own [x-destination]
+buses-own [x-destination y-destination capacity nb-passagers next-stop]
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Variable declarations ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -39,6 +40,9 @@ to setup
   [
    setxy random-xcor 0
    set heading 90
+   set x-destination floor ( world-width / 2 )
+   set y-destination 0
+
   ]
   
   create-peds initial-number-peds[
@@ -60,9 +64,18 @@ ask turtles
   ;;  get-on-bus
     
   ]
-  
-end
+  ask buses
+  [
 
+    if x-destination = pxcor
+    [
+      set heading heading + 180
+      set x-destination -1 * x-destination
+    ]
+    forward 1
+
+   ]  
+end
 
 @#$#@#$#@
 GRAPHICS-WINDOW
@@ -531,7 +544,7 @@ Polygon -7500403 true true 270 75 225 30 30 225 75 270
 Polygon -7500403 true true 30 75 75 30 270 225 225 270
 
 @#$#@#$#@
-NetLogo 5.0.4
+NetLogo 5.0.5
 @#$#@#$#@
 @#$#@#$#@
 @#$#@#$#@
@@ -539,9 +552,9 @@ NetLogo 5.0.4
 @#$#@#$#@
 default
 0.0
--0.2 0 1.0 0.0
+-0.2 0 0.0 1.0
 0.0 1 1.0 0.0
-0.2 0 1.0 0.0
+0.2 0 0.0 1.0
 link direction
 true
 0
