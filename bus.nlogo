@@ -88,11 +88,13 @@ ask turtles
       set x-destination [pxcor] of p
       set y-destination [pycor] of p
     ]
-    ;; Will take enter in the place
+    
+    ;; Peds can enter in the place
     if (distancexy x-destination y-destination) = 1
     [ 
       setxy x-destination y-destination
     ]
+    
     ;; Temporary ped are walking to their destination
     if (distancexy x-destination y-destination) > 1 
     [ 
@@ -223,28 +225,11 @@ initial-number-peds
 initial-number-peds
 0
 100
-1
+4
 1
 1
 NIL
 HORIZONTAL
-
-BUTTON
-38
-282
-101
-315
-x+1
-  ask peds\n  [\n  setxy ([pxcor] of patch-here) 0\n  set heading 90\n  forward 1\n  show (distancexy x-destination y-destination)\n  ]\n
-NIL
-1
-T
-OBSERVER
-NIL
-NIL
-NIL
-NIL
-1
 
 @#$#@#$#@
 ## WHAT IS IT?
