@@ -1,6 +1,8 @@
 breed [buses bus]
 breed [peds ped]
 
+undirected-link-breed [busped-links busped-link]
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Variable declarations ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -17,7 +19,7 @@ to setup
   ;;préparation environnement
    ask patches
    [
-       set pcolor green
+       set pcolor white
    
    ;;route horizontale
        if pycor = 0 [set pcolor grey]
@@ -26,11 +28,11 @@ to setup
        [
          if random-float 100 < bus-stop-density
          [
-           set pcolor black
+           set pcolor red
          ] 
        ]
        ;;put bus stops in an agentset
-       set stops patches with[pcolor = black]
+       set stops patches with[pcolor = red]
    ]
   
   ;;create buses
@@ -42,8 +44,8 @@ to setup
   ]
   
   create-peds initial-number-peds[
-    let p one-of stops
-    setxy ([pxcor] of p) ([pycor] of p)
+    move-to one-of stops
+    ;;setxy ([pxcor] of p) ([pycor] of p)
   ]
   
 end
@@ -54,16 +56,37 @@ to go
 ask turtles
   [
     
-    ;;set pcolor yellow
-    ;;TODO get on the bus if there is one
-   ;; if bus-is-here?
-  ;;  get-on-bus
-    
   ]
   
+ask buses [
+  forward 1;
+  ]
+
+ask peds [
+  ifelse (one-of my-busped-links != nobody) [
+    ped-on-bus
+  ]
+  [waiting-ped]
+  ;;get all buses that are on the neighbors.
+ ;; if length values-from links = 0 [waiting-ped]
+  ;;show
+]  
 end
 
+to waiting-ped
+  ;;waiting-ped
+  let reachable-buses turtles-on neighbors4
+  let my-bus one-of reachable-buses with [heading = 90]
+  if my-bus != nobody [create-busped-link-with my-bus]
+;;  if (one-of my-busped-links != nobody) [
+;;    print "Already has a link."
+;;   ]
+  ;;create-links-with reachable-buses
+end
 
+to ped-on-bus
+  move-to one-of my-busped-links
+end
 @#$#@#$#@
 GRAPHICS-WINDOW
 266
@@ -135,7 +158,7 @@ initial-number-buses
 initial-number-buses
 0
 100
-6
+1
 1
 1
 NIL
