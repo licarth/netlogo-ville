@@ -2,7 +2,8 @@ breed [buses bus]
 breed [peds ped]
 
 undirected-link-breed [busped-links busped-link]
-
+peds-own [x-destination y-destination]
+buses-own [x-destination y-destination capacity nb-passagers next-stop]
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Variable declarations ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -41,37 +42,23 @@ to setup
   [
    setxy random-xcor 0
    set heading 90
+   set x-destination floor ( world-width / 2 )
+   set y-destination 0
+
   ]
   
   create-peds initial-number-peds[
-    move-to one-of stops
-    ;;setxy ([pxcor] of p) ([pycor] of p)
+    let p one-of stops
+    setxy ([pxcor] of p) ([pycor] of p)
+    set x-destination [pxcor] of p
+    set y-destination [pycor] of p
   ]
   
 end
 
 
-to go 
 
-ask turtles
-  [
-    
-  ]
-  
-ask buses [
-  forward 1;
-  ]
 
-ask peds [
-  ifelse (one-of my-busped-links != nobody) [
-    ped-on-bus
-  ]
-  [waiting-ped]
-  ;;get all buses that are on the neighbors.
- ;; if length values-from links = 0 [waiting-ped]
-  ;;show
-]  
-end
 
 to waiting-ped
   ;;waiting-ped
@@ -84,8 +71,59 @@ to waiting-ped
   ;;create-links-with reachable-buses
 end
 
+to go 
+
+  ask buses
+  [
+
+    if x-destination = pxcor
+    [
+      set heading heading + 180
+      set x-destination -1 * x-destination
+    ]
+    forward 1
+
+ ] 
+
+  ask peds
+  [
+    ifelse (one-of my-busped-links != nobody) [
+    ped-on-bus
+  ]
+  [waiting-ped]
+  ;;get all buses that are on the neighbors.
+ ;; if length values-from links = 0 [waiting-ped]
+  ;;show 
+      ;; Will choose a new destination 
+    if (x-destination = [pxcor] of patch-here) and ( y-destination = [pycor] of patch-here)
+    [ 
+      let p one-of stops
+      set x-destination [pxcor] of p
+      set x-destination [pxcor] of p
+      set y-destination [pycor] of p
+    ]
+    
+    ;; Peds can enter in the place
+    if (distancexy x-destination y-destination) = 1
+    [ 
+      setxy x-destination y-destination
+    ]
+    
+    ;; Temporary ped are walking to their destination
+    if (distancexy x-destination y-destination) > 1 
+    [ 
+        setxy ([pxcor] of patch-here) 0
+        set heading 90
+        forward 1
+        show (distancexy x-destination y-destination)
+    ]
+    show x-destination  
+  ]
+end
+
 to ped-on-bus
   move-to one-of my-busped-links
+
 end
 @#$#@#$#@
 GRAPHICS-WINDOW
@@ -562,9 +600,9 @@ NetLogo 5.0.4
 @#$#@#$#@
 default
 0.0
--0.2 0 1.0 0.0
+-0.2 0 0.0 1.0
 0.0 1 1.0 0.0
-0.2 0 1.0 0.0
+0.2 0 0.0 1.0
 link direction
 true
 0
