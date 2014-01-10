@@ -22,8 +22,9 @@ to setup
    
    ;;route horizontale
        if pycor = 0 [set pcolor grey]
+       if pxcor = 0 [set pcolor grey]
    ;; bus stops
-       if pycor = 1
+       if (not (pcolor = grey) ) and ( [pcolor] of one-of neighbors4 = grey )
        [
          if random-float 100 < bus-stop-density
          [
@@ -50,6 +51,7 @@ to setup
     setxy ([pxcor] of p) ([pycor] of p)
     set x-destination [pxcor] of p
     set y-destination [pycor] of p
+    set heading 90
   ]
   
 end
@@ -98,8 +100,13 @@ ask turtles
     ;; Temporary ped are walking to their destination
     if (distancexy x-destination y-destination) > 1 
     [ 
-        setxy ([pxcor] of patch-here) 0
-        set heading 90
+        ;; setxy ([pxcor] of patch-here) 0
+        ;; choose dirrection while in a corner
+        show ([pcolor] of neighbors4)
+        if ([pcolor] of neighbors4 = grey ) 
+        [
+           set heading 0
+        ]
         forward 1
         show (distancexy x-destination y-destination)
     ]
@@ -176,9 +183,9 @@ SLIDER
 154
 initial-number-buses
 initial-number-buses
-0
-100
-6
+1
+10
+2
 1
 1
 NIL
@@ -208,9 +215,9 @@ SLIDER
 203
 bus-stop-density
 bus-stop-density
-0
+1
 100
-20
+51
 10
 1
 NIL
@@ -225,7 +232,7 @@ initial-number-peds
 initial-number-peds
 0
 100
-6
+4
 1
 1
 NIL
