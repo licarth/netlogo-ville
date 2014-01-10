@@ -1,6 +1,6 @@
 breed [buses bus]
 breed [peds ped]
-peds-own [x-destination]
+peds-own [x-destination y-destination]
 buses-own [x-destination y-destination capacity nb-passagers next-stop]
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Variable declarations ;;
@@ -48,6 +48,8 @@ to setup
   create-peds initial-number-peds[
     let p one-of stops
     setxy ([pxcor] of p) ([pycor] of p)
+    set x-destination [pxcor] of p
+    set y-destination [pycor] of p
   ]
   
 end
@@ -74,9 +76,37 @@ ask turtles
     ]
     forward 1
 
-   ]  
-end
+ ] 
 
+  ask peds
+  [
+    ;; Will choose a new destination 
+    if (x-destination = [pxcor] of patch-here) and ( y-destination = [pycor] of patch-here)
+    [ 
+      let p one-of stops
+      set x-destination [pxcor] of p
+      set x-destination [pxcor] of p
+      set y-destination [pycor] of p
+    ]
+    
+    ;; Peds can enter in the place
+    if (distancexy x-destination y-destination) = 1
+    [ 
+      setxy x-destination y-destination
+    ]
+    
+    ;; Temporary ped are walking to their destination
+    if (distancexy x-destination y-destination) > 1 
+    [ 
+        setxy ([pxcor] of patch-here) 0
+        set heading 90
+        forward 1
+        show (distancexy x-destination y-destination)
+    ]
+    show x-destination  
+  ]
+
+end
 @#$#@#$#@
 GRAPHICS-WINDOW
 266
