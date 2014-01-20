@@ -24,8 +24,10 @@ to setup
    
    ;;route horizontale
        if pycor = 0 [set pcolor grey]
+   ;;route verticale 
+       if pxcor = 0 [set pcolor grey]
    ;; bus stops
-       if pycor = 1
+       if (not (pcolor = grey) ) and ([pcolor] of one-of neighbors4 = grey )
        [
          if random-float 100 < bus-stop-density
          [
@@ -38,6 +40,7 @@ to setup
   
   ;;create buses
   set-default-shape buses "car"
+  ;; horizontal
   create-buses initial-number-buses
   [
    setxy random-xcor 0
@@ -45,7 +48,15 @@ to setup
    set x-destination floor ( world-width / 2 )
    set y-destination 0
    set stops-list []
-
+  ]
+  ;;vertical
+  create-buses initial-number-buses
+  [
+   setxy 0 random-xcor
+   set heading 0
+   set x-destination 0
+   set y-destination floor ( world-width / 2 )
+   set stops-list []
   ]
   
   create-peds initial-number-peds[
@@ -66,10 +77,11 @@ to go
   ask buses
   [
 
-    if x-destination = pxcor
+    if x-destination = pxcor and y-destination = pycor 
     [
       set heading heading + 180
       set x-destination -1 * x-destination
+      set y-destination -1 * y-destination
       set stops-list sort patches with [pcolor = grey]
       
     ]
@@ -96,14 +108,14 @@ to go
     if  (patch x-destination y-destination = patch-here)
     [ 
       ;; clear destination
-      ask patch x-destination (y-destination + 1) [ set pcolor white]
+      ask patch x-destination y-destination [ set pcolor red]
       ;; setting new destination
       let p one-of stops
       set x-destination [pxcor] of p
       set y-destination [pycor] of p
       let mycolor color
       show word word word "ped " color " have a new destination " word x-destination y-destination 
-      ask patch x-destination (y-destination + 1) [ set pcolor mycolor]
+      ask patch x-destination y-destination [ set pcolor mycolor]
       
     ]
     
@@ -141,14 +153,10 @@ to waiting-ped
     show word word "Distance minimale sur trajet du bus " floor min all-distances word " - distance actuelle " floor distance my-destination
     if floor min all-distances <= floor distance my-destination
       [set my-bus one-of reachable-buses]
-    
-    ;;let my-bus one-of reachable-buses with [heading = 90]
+
     if my-bus != nobody [create-busped-link-with my-bus]
   ]
-;;  if (one-of my-busped-links != nobody) [
-;;    print "Already has a link."
-;;   ]
-  ;;create-links-with reachable-buses
+
 end
 @#$#@#$#@
 GRAPHICS-WINDOW
