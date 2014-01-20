@@ -3,7 +3,7 @@ breed [peds ped]
 
 undirected-link-breed [busped-links busped-link]
 peds-own [x-destination y-destination]
-buses-own [x-destination y-destination capacity nb-passagers next-stop]
+buses-own [x-destination y-destination capacity nb-passagers stops-list ]
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Variable declarations ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -44,6 +44,7 @@ to setup
    set heading 90
    set x-destination floor ( world-width / 2 )
    set y-destination 0
+   set stops-list []
 
   ]
   
@@ -60,17 +61,6 @@ end
 
 
 
-to waiting-ped
-  ;;waiting-ped
-  let reachable-buses turtles-on neighbors4
-  let my-bus one-of reachable-buses with [heading = 90]
-  if my-bus != nobody [create-busped-link-with my-bus]
-;;  if (one-of my-busped-links != nobody) [
-;;    print "Already has a link."
-;;   ]
-  ;;create-links-with reachable-buses
-end
-
 to go 
 
   ask buses
@@ -80,8 +70,18 @@ to go
     [
       set heading heading + 180
       set x-destination -1 * x-destination
+      set stops-list sort patches with [pcolor = grey]
+      
     ]
+    ;;show stops-list
+    if (member? patch-here stops-list)
+    [
+      set stops-list remove patch-here stops-list
+    ]
+    
     forward 1
+    
+    
 
  ] 
 
@@ -95,35 +95,66 @@ to go
  ;; if length values-from links = 0 [waiting-ped]
   ;;show 
       ;; Will choose a new destination 
-    if (x-destination = [pxcor] of patch-here) and ( y-destination = [pycor] of patch-here)
+    if  (x-destination = [pxcor] of patch-here) and ( y-destination = [pycor] of patch-here)
     [ 
+      show "New destination"
       let p one-of stops
-      set x-destination [pxcor] of p
       set x-destination [pxcor] of p
       set y-destination [pycor] of p
     ]
     
-    ;; Peds can enter in the place
-    if (distancexy x-destination y-destination) = 1
-    [ 
-      setxy x-destination y-destination
-    ]
+
     
     ;; Temporary ped are walking to their destination
-    if (distancexy x-destination y-destination) > 1 
+    if false and (distancexy x-destination y-destination) > 1 
     [ 
         setxy ([pxcor] of patch-here) 0
         set heading 90
         forward 1
         show (distancexy x-destination y-destination)
     ]
-    show x-destination  
+   
   ]
 end
 
 to ped-on-bus
-  move-to one-of my-busped-links
+  show "My destination"
+  show patch x-destination y-destination 
+  ;; Peds can enter in the place
+  ifelse  member? patch  x-destination y-destination  neighbors4 
+  [ 
+    setxy x-destination y-destination
+    ask my-busped-links [ die ]
+  ]
+  [
+   move-to one-of link-neighbors  
+  ]
+end
 
+to waiting-ped
+  ;;waiting-ped
+  let reachable-buses buses-on neighbors4
+  let my-bus nobody
+  if one-of reachable-buses != nobody
+  [
+    let next-bus-patch first [ stops-list ] of one-of reachable-buses 
+    let my-destination patch x-destination y-destination
+    let distance-with-bus distance my-destination
+    ask next-bus-patch [ set distance-with-bus distance my-destination ]
+    show "next bus patch to destination"
+    show distance-with-bus
+    show "here to destination"
+    show distance my-destination
+    if distance-with-bus < distance my-destination
+    [set my-bus one-of reachable-buses]
+
+    ;;let my-bus one-of reachable-buses with [heading = 90]
+    if my-bus != nobody [create-busped-link-with my-bus]
+  ]
+;;  if (one-of my-busped-links != nobody) [
+;;    print "Already has a link."
+;;   ]
+  ;;create-links-with reachable-buses
 end
 @#$#@#$#@
 GRAPHICS-WINDOW
@@ -243,7 +274,7 @@ initial-number-peds
 initial-number-peds
 0
 100
-6
+2
 1
 1
 NIL
@@ -592,7 +623,7 @@ Polygon -7500403 true true 270 75 225 30 30 225 75 270
 Polygon -7500403 true true 30 75 75 30 270 225 225 270
 
 @#$#@#$#@
-NetLogo 5.0.4
+NetLogo 5.0.5
 @#$#@#$#@
 @#$#@#$#@
 @#$#@#$#@
