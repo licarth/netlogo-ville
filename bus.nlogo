@@ -80,7 +80,7 @@ to go
 
   ask buses
   [
-
+    forward 1
     if x-destination = pxcor and y-destination = pycor 
     [
       set heading heading + 180
@@ -91,14 +91,11 @@ to go
       set stops-list sort patches with [pcolor = grey and (pxcor = x-d or pycor = y-d) ]
       
     ]
-    ;;show stops-list
+
     if (member? patch-here stops-list)
     [
       set stops-list remove patch-here stops-list
     ]
-    
-    forward 1
-    
     
 
  ] 
@@ -113,15 +110,24 @@ to go
       ;; Will choose a new destination 
     if  (patch x-destination y-destination = patch-here)
     [ 
-      ;; clear destination
-      ask patch x-destination y-destination [ set pcolor red]
+      ;; display option - remove color of the destination - optional  
+      let x-des-mark  x-destination
+      let y-des-mark  y-destination
+      if x-destination = 1 [set x-des-mark 2]
+      if y-destination = 1 [set y-des-mark 2]
+      ask patch x-des-mark y-des-mark [ set pcolor white]
+      
       ;; setting new destination
       let p one-of stops
       set x-destination [pxcor] of p
       set y-destination [pycor] of p
       let mycolor color
       show word word word "ped " color " have a new destination " word x-destination y-destination 
-      ask patch x-destination y-destination [ set pcolor mycolor]
+      
+      ;; Display destination on the map  - optional 
+      ifelse x-destination = 1 [set x-des-mark 2] [set x-des-mark x-destination]
+      ifelse y-destination = 1 [set y-des-mark 2] [set y-des-mark y-destination]
+      ask patch x-des-mark y-des-mark [ set pcolor mycolor]
       
     ]
     
@@ -130,6 +136,7 @@ end
 
 to ped-on-bus
   ;; show word "My destination" patch x-destination y-destination 
+  
   ;; Peds can enter in the place when the bus is in front of it
   ifelse  member? patch  x-destination y-destination  neighbors4 
   [ 
@@ -150,32 +157,36 @@ to ped-on-bus
 end
 
 to waiting-ped
-  let reachable-buses buses-on neighbors4
+  let reachable-buses sort buses-on neighbors4
   let my-bus nobody
-  if one-of reachable-buses != nobody and empty? [ stops-list ] of one-of reachable-buses = false
-  [
-    let my-destination patch x-destination y-destination
-    
-    let next-bus-stops [ stops-list ] of one-of reachable-buses
-    let all-distances []
-
-    foreach next-bus-stops [ 
-      let distance-bus-stop distance my-destination
-      ask ? [ set distance-bus-stop distance my-destination ]
-      if not member? ? neighbors4 [ set all-distances fput distance-bus-stop all-distances  ]
+  foreach reachable-buses [
+    if  ? != nobody and empty? [ stops-list ] of ? = false
+    [
+      let my-destination patch x-destination y-destination
+      
+      let next-bus-stops [ stops-list ] of ?
+      let all-distances []
+      let actual-distance distance my-destination
+      ask one-of neighbors4 with [pcolor = grey]  [set actual-distance distance my-destination ]
+      foreach next-bus-stops [ 
+        let distance-bus-stop distance my-destination
+        ask ? [ set distance-bus-stop distance my-destination ]
+        if not member? ? neighbors4 [ set all-distances fput distance-bus-stop all-distances  ]
       ]
-    if  (not empty? all-distances) [
-      show word word "Distance minimale sur trajet du bus "  min all-distances word " - distance actuelle "  distance my-destination
-      
-      if (patch-here != patch 1 1) and ( min all-distances - distance my-destination <= 1)
-      [set my-bus one-of reachable-buses]
-      
-      if (patch-here = patch 1 1) and (floor min all-distances = 1)
-      [set my-bus one-of reachable-buses]
-      
-      set need-change-bus floor min all-distances != 1
+      if  (not empty? all-distances) [
+        show word word "Distance minimale sur trajet du bus "  min all-distances word " - distance actuelle "  actual-distance
+        
+        if (not member? patch 0 0 neighbors) and ( min all-distances < actual-distance )
+        [ set my-bus ?]
+        
+        if floor min all-distances = 1
+        [set my-bus ?]
+        
+        ;; if the bus is has no stop in front of destination
+        set need-change-bus floor min all-distances != 1  
+      ]
+      if my-bus != nobody [create-busped-link-with my-bus]
     ]
-    if my-bus != nobody [create-busped-link-with my-bus]
   ]
 
 end
@@ -248,9 +259,9 @@ SLIDER
 154
 initial-number-buses
 initial-number-buses
-0
-100
-5
+1
+10
+1
 1
 1
 NIL
@@ -296,7 +307,7 @@ SLIDER
 initial-number-peds
 initial-number-peds
 0
-100
+10
 2
 1
 1
