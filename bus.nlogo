@@ -107,17 +107,6 @@ to go
       
     ]
     
-
-    
-    ;; Temporary ped are walking to their destination
-    if false and (distancexy x-destination y-destination) > 1 
-    [ 
-        setxy ([pxcor] of patch-here) 0
-        set heading 90
-        forward 1
-        show (distancexy x-destination y-destination)
-    ]
-   
   ]
 end
 
@@ -143,10 +132,11 @@ to waiting-ped
     
     let next-bus-stops [ stops-list ] of one-of reachable-buses
     let all-distances []
+
     foreach next-bus-stops [ 
       let distance-bus-stop distance my-destination
       ask ? [ set distance-bus-stop distance my-destination ]
-      set all-distances fput distance-bus-stop all-distances
+      if not member? ? neighbors4 [ set all-distances fput distance-bus-stop all-distances  ]
       ]
     show word word "Distance minimale sur trajet du bus " floor min all-distances word " - distance actuelle " floor distance my-destination
     if floor min all-distances <= floor distance my-destination
