@@ -91,16 +91,20 @@ to go
     ped-on-bus
   ]
   [waiting-ped]
-  ;;get all buses that are on the neighbors.
- ;; if length values-from links = 0 [waiting-ped]
-  ;;show 
+
       ;; Will choose a new destination 
-    if  (x-destination = [pxcor] of patch-here) and ( y-destination = [pycor] of patch-here)
+    if  (patch x-destination y-destination = patch-here)
     [ 
-      show "New destination"
+      ;; clear destination
+      ask patch x-destination (y-destination + 1) [ set pcolor white]
+      ;; setting new destination
       let p one-of stops
       set x-destination [pxcor] of p
       set y-destination [pycor] of p
+      let mycolor color
+      show word word word "ped " color " have a new destination " word x-destination y-destination 
+      ask patch x-destination (y-destination + 1) [ set pcolor mycolor]
+      
     ]
     
 
@@ -118,9 +122,8 @@ to go
 end
 
 to ped-on-bus
-  show "My destination"
-  show patch x-destination y-destination 
-  ;; Peds can enter in the place
+  ;; show word "My destination" patch x-destination y-destination 
+  ;; Peds can enter in the place when the bus is in front of it
   ifelse  member? patch  x-destination y-destination  neighbors4 
   [ 
     setxy x-destination y-destination
@@ -132,22 +135,23 @@ to ped-on-bus
 end
 
 to waiting-ped
-  ;;waiting-ped
   let reachable-buses buses-on neighbors4
   let my-bus nobody
-  if one-of reachable-buses != nobody
+  if one-of reachable-buses != nobody and empty? [ stops-list ] of one-of reachable-buses = false
   [
-    let next-bus-patch first [ stops-list ] of one-of reachable-buses 
     let my-destination patch x-destination y-destination
-    let distance-with-bus distance my-destination
-    ask next-bus-patch [ set distance-with-bus distance my-destination ]
-    show "next bus patch to destination"
-    show distance-with-bus
-    show "here to destination"
-    show distance my-destination
-    if distance-with-bus < distance my-destination
-    [set my-bus one-of reachable-buses]
-
+    
+    let next-bus-stops [ stops-list ] of one-of reachable-buses
+    let all-distances []
+    foreach next-bus-stops [ 
+      let distance-bus-stop distance my-destination
+      ask ? [ set distance-bus-stop distance my-destination ]
+      set all-distances fput distance-bus-stop all-distances
+      ]
+    show word word "Distance minimale sur trajet du bus " floor min all-distances word " - distance actuelle " floor distance my-destination
+    if floor min all-distances <= floor distance my-destination
+      [set my-bus one-of reachable-buses]
+    
     ;;let my-bus one-of reachable-buses with [heading = 90]
     if my-bus != nobody [create-busped-link-with my-bus]
   ]
@@ -171,8 +175,8 @@ GRAPHICS-WINDOW
 1
 1
 0
-1
-1
+0
+0
 1
 -16
 16
