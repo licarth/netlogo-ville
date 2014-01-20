@@ -2,7 +2,7 @@ breed [buses bus]
 breed [peds ped]
 
 undirected-link-breed [busped-links busped-link]
-peds-own [x-destination y-destination]
+peds-own [x-destination y-destination need-change-bus]
 buses-own [x-destination y-destination capacity nb-passagers stops-list ]
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Variable declarations ;;
@@ -26,16 +26,21 @@ to setup
        if pycor = 0 [set pcolor grey]
    ;;route verticale 
        if pxcor = 0 [set pcolor grey]
+
    ;; bus stops
-       if (not (pcolor = grey) ) and ([pcolor] of one-of neighbors4 = grey )
+       if (not (pcolor = grey) ) and ([pcolor] of one-of neighbors4 = grey ) and (pxcor = 1 or pycor = 1)
        [
          if random-float 100 < bus-stop-density
          [
            set pcolor red
          ] 
        ]
+   ;; central bus station
+       if pxcor = 1 and pycor = 1
+       [ set pcolor black ]
+       
        ;;put bus stops in an agentset
-       set stops patches with[pcolor = red]
+       set stops patches with[pcolor = red ]
    ]
   
   ;;create buses
@@ -64,11 +69,10 @@ to setup
     setxy ([pxcor] of p) ([pycor] of p)
     set x-destination [pxcor] of p
     set y-destination [pycor] of p
+    set need-change-bus false
   ]
   
 end
-
-
 
 
 
@@ -82,7 +86,9 @@ to go
       set heading heading + 180
       set x-destination -1 * x-destination
       set y-destination -1 * y-destination
-      set stops-list sort patches with [pcolor = grey]
+      let x-d  x-destination ;; for visibility in patch context
+      let y-d  y-destination
+      set stops-list sort patches with [pcolor = grey and (pxcor = x-d or pycor = y-d) ]
       
     ]
     ;;show stops-list
@@ -131,7 +137,15 @@ to ped-on-bus
     ask my-busped-links [ die ]
   ]
   [
-   move-to one-of link-neighbors  
+   ;; Peds can change bus at the central bus station
+   ifelse (member? patch 1 1 neighbors4) and need-change-bus 
+   [
+     setxy 1 1
+     ask my-busped-links [ die ]
+   ]
+   [
+     move-to one-of link-neighbors
+    ]
   ]
 end
 
@@ -150,10 +164,17 @@ to waiting-ped
       ask ? [ set distance-bus-stop distance my-destination ]
       if not member? ? neighbors4 [ set all-distances fput distance-bus-stop all-distances  ]
       ]
-    show word word "Distance minimale sur trajet du bus " floor min all-distances word " - distance actuelle " floor distance my-destination
-    if floor min all-distances <= floor distance my-destination
+    if  (not empty? all-distances) [
+      show word word "Distance minimale sur trajet du bus "  min all-distances word " - distance actuelle "  distance my-destination
+      
+      if (patch-here != patch 1 1) and ( min all-distances - distance my-destination <= 1)
       [set my-bus one-of reachable-buses]
-
+      
+      if (patch-here = patch 1 1) and (floor min all-distances = 1)
+      [set my-bus one-of reachable-buses]
+      
+      set need-change-bus floor min all-distances != 1
+    ]
     if my-bus != nobody [create-busped-link-with my-bus]
   ]
 
@@ -229,7 +250,7 @@ initial-number-buses
 initial-number-buses
 0
 100
-1
+5
 1
 1
 NIL
@@ -261,7 +282,7 @@ bus-stop-density
 bus-stop-density
 0
 100
-20
+90
 10
 1
 NIL
